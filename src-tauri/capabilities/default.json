@@ -1,0 +1,30 @@
+{
+  "identifier": "main-window",
+  "description": "Allow running the yt-dlp sidecar for downloads.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/yt-dlp",
+          "cmd": "binaries/yt-dlp",
+          "sidecar": true,
+          "args": [
+            "-f",
+            "bestaudio",
+            "-o",
+            {
+              "validator": ".+"
+            },
+            {
+              "validator": "https?://.+"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

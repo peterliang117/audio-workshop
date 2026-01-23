@@ -8,12 +8,18 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Audio Workshop",
         "width": 1200,
         "height": 800
       }
+    ]
+  },
+  "bundle": {
+    "externalBin": [
+      "binaries/yt-dlp"
     ]
   }
 }
