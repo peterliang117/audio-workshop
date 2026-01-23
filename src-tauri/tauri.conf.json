@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Audio Workshop",
+  "version": "0.1.0",
+  "identifier": "com.audio.workshop",
+  "build": {
+    "devUrl": "http://localhost:5055/",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Audio Workshop",
+        "width": 1200,
+        "height": 800
+      }
+    ]
+  }
+}

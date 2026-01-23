@@ -1,0 +1,3 @@
+[submodule "vendor/audiomass"]
+	path = vendor/audiomass
+	url = https://github.com/pkalogiros/AudioMass.git
