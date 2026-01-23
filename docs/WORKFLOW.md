@@ -1,7 +1,7 @@
 # Workflow
 
 ## Product workflow
-1) Import audio from Files/iCloud or Share Sheet.
+1) Import audio from a YouTube link.
 2) Preview playback and scrub to find edit points.
 3) Apply edits (trim, volume, fade in/out).
 4) Export:

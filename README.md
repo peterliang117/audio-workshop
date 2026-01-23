@@ -1,16 +1,16 @@
 # audio-workshop-ios
-Personal iOS audio editor for trimming, fades, and exporting audio or black-screen video (1080x1920).
+Personal iOS audio editor for trimming, fades, and exporting audio or black-screen video (1080x1920) from a YouTube link.
 
 ## Overview
-Audio Workshop iOS is a lightweight, personal MVP for quick audio edits and export. Audio is imported from Files/iCloud or Share Sheet and processed at export-time.
+Audio Workshop iOS is a lightweight, personal MVP for quick audio edits and export. Audio is imported from a YouTube link and processed at export-time.
 
 ## MVP scope
 - Personal audio editing + export utility.
-- Audio sources: Files/iCloud/Share Sheet imports only.
-- No YouTube downloading/scraping features.
+- Input source: YouTube link (download + extract audio).
+- Output: audio file or black-screen video export.
 
 ## Features
-- Import audio (Files/iCloud).
+- Import via YouTube link.
 - Preview playback with scrubber.
 - Basic edits applied at export-time:
   - Trim (start/end).

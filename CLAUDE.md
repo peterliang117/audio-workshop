@@ -2,11 +2,11 @@
 
 ## Scope (must follow)
 - Personal audio editing + export utility.
-- Audio sources: Files/iCloud/Share Sheet imports only.
-- No YouTube downloading/scraping features.
+- Input source: YouTube link (download + extract audio).
+- Output: audio file or black-screen video export.
 
 ## MVP Features
-1) Import audio (Files/iCloud)
+1) Import via YouTube link
 2) Preview playback with scrubber
 3) Basic edits applied at export-time:
    - Trim (start/end)
