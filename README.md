@@ -1,11 +1,12 @@
 # audio-workshop-ios
-Personal iOS audio editor for trimming, fades, and exporting audio or black-screen video (1080x1920) from a YouTube link.
+Personal desktop audio editor for trimming, fades, and exporting audio or black-screen video (1080x1920) from a YouTube link. iOS is a future MVP.
 
 ## Overview
-Audio Workshop iOS is a lightweight, personal MVP for quick audio edits and export. Audio is imported from a YouTube link and processed at export-time.
+Audio Workshop is a lightweight, personal MVP for quick audio edits and export. MVP 1 targets desktop; iOS is planned later. Audio is imported from a YouTube link and processed at export-time.
 
 ## MVP scope
 - Personal audio editing + export utility.
+- MVP 1 is a desktop app; iOS is a future MVP.
 - Input source: YouTube link (download + extract audio).
 - Output: audio file or black-screen video export.
 

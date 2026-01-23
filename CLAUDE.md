@@ -1,7 +1,8 @@
-# Audio Workshop iOS (Personal MVP)
+# Audio Workshop (Personal MVP)
 
 ## Scope (must follow)
 - Personal audio editing + export utility.
+- MVP 1 is a desktop app; iOS is a future MVP.
 - Input source: YouTube link (download + extract audio).
 - Output: audio file or black-screen video export.
 
