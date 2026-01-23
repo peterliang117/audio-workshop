@@ -25,6 +25,27 @@
           ]
         }
       ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/yt-dlp",
+          "cmd": "binaries/yt-dlp",
+          "sidecar": true,
+          "args": [
+            "-f",
+            "bestaudio",
+            "-o",
+            {
+              "validator": ".+"
+            },
+            {
+              "validator": "https?://.+"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

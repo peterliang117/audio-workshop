@@ -82,3 +82,21 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+
+# deps
+node_modules/
+
+# Rust/Tauri build outputs
+src-tauri/target/
+target/
+
+# local outputs
+downloads/
+
+# generated
+src-tauri/gen/
+
+# OS
+.DS_Store
+Thumbs.db
+
