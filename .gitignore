@@ -100,3 +100,14 @@ src-tauri/gen/
 .DS_Store
 Thumbs.db
 
+
+# deps
+node_modules/
+
+# Rust/Tauri build outputs
+src-tauri/target/
+target/
+
+# local outputs
+downloads/
+

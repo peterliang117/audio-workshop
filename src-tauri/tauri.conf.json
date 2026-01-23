@@ -5,7 +5,7 @@
   "identifier": "com.audio.workshop",
   "build": {
     "devUrl": "http://localhost:5055/",
-    "frontendDist": "../dist"
+    "frontendDist": "../vendor/audiomass/src"
   },
   "app": {
     "withGlobalTauri": true,
