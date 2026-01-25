@@ -5,6 +5,7 @@
     "main"
   ],
   "permissions": [
+    "dialog:allow-open",
     {
       "identifier": "shell:allow-execute",
       "allow": [
@@ -13,12 +14,25 @@
           "cmd": "binaries/yt-dlp",
           "sidecar": true,
           "args": [
+            "--ignore-config",
+            "--ffmpeg-location",
+            {
+              "validator": ".+"
+            },
             "-f",
             "bestaudio",
+            "-x",
+            "--audio-format",
+            "m4a",
+            "--audio-quality",
+            "0",
+            "--windows-filenames",
             "-o",
             {
               "validator": ".+"
             },
+            "--print",
+            "after_move:filepath",
             {
               "validator": "https?://.+"
             }
@@ -34,12 +48,25 @@
           "cmd": "binaries/yt-dlp",
           "sidecar": true,
           "args": [
+            "--ignore-config",
+            "--ffmpeg-location",
+            {
+              "validator": ".+"
+            },
             "-f",
             "bestaudio",
+            "-x",
+            "--audio-format",
+            "m4a",
+            "--audio-quality",
+            "0",
+            "--windows-filenames",
             "-o",
             {
               "validator": ".+"
             },
+            "--print",
+            "after_move:filepath",
             {
               "validator": "https?://.+"
             }
@@ -47,5 +74,20 @@
         }
       ]
     }
+  ],
+  "commands": [
+    "get_download_root",
+    "set_download_root",
+    "ensure_downloads_dir",
+    "get_binaries_dir",
+    "get_export_root",
+    "prepare_temp_audio",
+    "write_binary_file",
+    "export_black_video",
+    "write_video_log",
+    "append_video_trace",
+    "write_download_log",
+    "write_meta_file",
+    "read_downloaded_file"
   ]
 }
