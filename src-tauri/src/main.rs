@@ -16,6 +16,7 @@ struct DownloadPaths {
 #[derive(Debug, Deserialize, Serialize, Default)]
 struct Settings {
     download_root: Option<String>,
+    export_root: Option<String>,
 }
 
 fn app_root() -> Result<PathBuf, String> {
@@ -62,7 +63,7 @@ fn logs_root() -> Result<PathBuf, String> {
     Ok(app_root()?.join("logs"))
 }
 
-fn exports_root() -> Result<PathBuf, String> {
+fn default_export_root() -> Result<PathBuf, String> {
     Ok(app_root()?.join("exports"))
 }
 
@@ -80,6 +81,18 @@ fn resolve_download_root() -> Result<PathBuf, String> {
         return Ok(app_root()?.join(path));
     }
     default_download_root()
+}
+
+fn resolve_export_root() -> Result<PathBuf, String> {
+    let settings = load_settings()?;
+    if let Some(root) = settings.export_root {
+        let path = PathBuf::from(root);
+        if path.is_absolute() {
+            return Ok(path);
+        }
+        return Ok(app_root()?.join(path));
+    }
+    default_export_root()
 }
 
 fn validate_writable_dir(path: &Path) -> Result<(), String> {
@@ -122,47 +135,231 @@ fn append_video_trace_line(session_id: &str, line: &str) -> Result<(), String> {
 }
 
 fn binaries_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    if let Ok(resource_dir) = app.path().resource_dir() {
-        let candidate = resource_dir.join("binaries");
-        if candidate.exists() {
-            return candidate
-                .canonicalize()
-                .map_err(|e| e.to_string());
+    let mut diag: Vec<String> = Vec::new();
+
+    match app.path().resource_dir() {
+        Ok(resource_dir) => {
+            diag.push(format!(
+                "resource_dir={}",
+                resource_dir.to_string_lossy()
+            ));
+
+            // Tauri sidecars can land either in `resources/binaries` or directly
+            // in the `resources` (or even the exe) directory depending on build
+            // and installer behavior. Check all common locations.
+            let parent_dir = resource_dir
+                .parent()
+                .map(|p| p.to_path_buf())
+                .unwrap_or_else(|| resource_dir.clone());
+            let candidates = [
+                resource_dir.join("binaries"),
+                resource_dir.clone(),
+                parent_dir,
+                resource_dir.join("..").join("binaries"),
+            ];
+            for candidate in candidates {
+                let has_bins = has_required_binaries(&candidate);
+                diag.push(format!(
+                    "candidate(resource)={} exists={} has_bins={}",
+                    candidate.to_string_lossy(),
+                    candidate.exists(),
+                    has_bins
+                ));
+                if has_bins {
+                    return candidate.canonicalize().map_err(|e| {
+                        format!(
+                            "Binaries found but canonicalize failed: {e}. diag={}",
+                            diag.join(" | ")
+                        )
+                    });
+                }
+            }
+        }
+        Err(err) => {
+            diag.push(format!("resource_dir_error={err}"));
         }
     }
 
+    match std::env::current_exe() {
+        Ok(exe_path) => {
+            diag.push(format!("current_exe={}", exe_path.to_string_lossy()));
+            if let Some(exe_dir) = exe_path.parent() {
+                diag.push(format!("current_exe_dir={}", exe_dir.to_string_lossy()));
+                if let Some(candidate) = find_binaries_dir(exe_dir) {
+                    diag.push(format!(
+                        "candidate(exe_ancestors)={}",
+                        candidate.to_string_lossy()
+                    ));
+                    return candidate.canonicalize().map_err(|e| {
+                        format!(
+                            "Binaries found via exe ancestors but canonicalize failed: {e}. diag={}",
+                            diag.join(" | ")
+                        )
+                    });
+                }
+                diag.push("candidate(exe_ancestors)=none".into());
+            }
+        }
+        Err(err) => {
+            diag.push(format!("current_exe_error={err}"));
+        }
+    }
+
+    let cwd = std::env::current_dir().map_err(|e| {
+        format!(
+            "Unable to resolve current_dir: {e}. diag={}",
+            diag.join(" | ")
+        )
+    })?;
+    diag.push(format!("current_dir={}", cwd.to_string_lossy()));
+    if let Some(candidate) = find_binaries_dir(&cwd) {
+        diag.push(format!(
+            "candidate(cwd_ancestors)={}",
+            candidate.to_string_lossy()
+        ));
+        return candidate.canonicalize().map_err(|e| {
+            format!(
+                "Binaries found via cwd ancestors but canonicalize failed: {e}. diag={}",
+                diag.join(" | ")
+            )
+        });
+    }
+    diag.push("candidate(cwd_ancestors)=none".into());
+
+    // As a last resort, try to repair the sidecar layout in the install folder
+    // by creating a `binaries` directory and copying/renaming any tools that
+    // were placed next to the executable.
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            if let Some(candidate) = find_binaries_dir(exe_dir) {
-                return candidate
-                    .canonicalize()
-                    .map_err(|e| e.to_string());
+            diag.push(format!("repair_attempt_dir={}", exe_dir.to_string_lossy()));
+            match repair_binaries_layout(exe_dir) {
+                Ok(Some(repaired_dir)) => {
+                    diag.push(format!(
+                        "repair_success_dir={}",
+                        repaired_dir.to_string_lossy()
+                    ));
+                    return repaired_dir.canonicalize().map_err(|e| {
+                        format!(
+                            "Binaries repaired but canonicalize failed: {e}. diag={}",
+                            diag.join(" | ")
+                        )
+                    });
+                }
+                Ok(None) => {
+                    diag.push("repair_result=none".into());
+                }
+                Err(err) => {
+                    diag.push(format!("repair_error={err}"));
+                }
             }
         }
     }
 
-    let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
-    if let Some(candidate) = find_binaries_dir(&cwd) {
-        return candidate
-            .canonicalize()
-            .map_err(|e| e.to_string());
-    }
-
-    Err("Binaries directory not found".into())
+    Err(format!(
+        "Binaries directory not found. diag={}",
+        diag.join(" | ")
+    ))
 }
 
 fn find_binaries_dir(start: &Path) -> Option<PathBuf> {
     for ancestor in start.ancestors() {
         let direct = ancestor.join("binaries");
-        if direct.exists() {
+        if has_required_binaries(&direct) {
             return Some(direct);
         }
+        if has_required_binaries(ancestor) {
+            return Some(ancestor.to_path_buf());
+        }
         let src_tauri = ancestor.join("src-tauri").join("binaries");
-        if src_tauri.exists() {
+        if has_required_binaries(&src_tauri) {
             return Some(src_tauri);
+        }
+        let resources = ancestor.join("resources");
+        if has_required_binaries(&resources) {
+            return Some(resources);
+        }
+        let resources_binaries = resources.join("binaries");
+        if has_required_binaries(&resources_binaries) {
+            return Some(resources_binaries);
         }
     }
     None
+}
+
+fn has_required_binaries(dir: &Path) -> bool {
+    let ffmpeg = dir.join("ffmpeg.exe");
+    let ffmpeg_triple = dir.join("ffmpeg-x86_64-pc-windows-msvc.exe");
+    let ffprobe = dir.join("ffprobe.exe");
+    let ffprobe_triple = dir.join("ffprobe-x86_64-pc-windows-msvc.exe");
+    let yt_dlp = dir.join("yt-dlp.exe");
+    let yt_dlp_triple = dir.join("yt-dlp-x86_64-pc-windows-msvc.exe");
+    ffmpeg.exists()
+        || ffmpeg_triple.exists()
+        || ffprobe.exists()
+        || ffprobe_triple.exists()
+        || yt_dlp.exists()
+        || yt_dlp_triple.exists()
+}
+
+fn first_existing(paths: &[PathBuf]) -> Option<PathBuf> {
+    for path in paths {
+        if path.exists() {
+            return Some(path.clone());
+        }
+    }
+    None
+}
+
+fn repair_binaries_layout(exe_dir: &Path) -> Result<Option<PathBuf>, String> {
+    let binaries_dir = exe_dir.join("binaries");
+    std::fs::create_dir_all(&binaries_dir).map_err(|e| e.to_string())?;
+
+    let ffmpeg_src = first_existing(&[
+        exe_dir.join("ffmpeg-x86_64-pc-windows-msvc.exe"),
+        exe_dir.join("ffmpeg.exe"),
+    ]);
+    let ffprobe_src = first_existing(&[
+        exe_dir.join("ffprobe-x86_64-pc-windows-msvc.exe"),
+        exe_dir.join("ffprobe.exe"),
+    ]);
+    let yt_dlp_src = first_existing(&[
+        exe_dir.join("yt-dlp-x86_64-pc-windows-msvc.exe"),
+        exe_dir.join("yt-dlp.exe"),
+    ]);
+
+    let mut copied_any = false;
+
+    if let Some(src) = ffmpeg_src {
+        let dest = binaries_dir.join("ffmpeg-x86_64-pc-windows-msvc.exe");
+        if !dest.exists() {
+            std::fs::copy(&src, &dest).map_err(|e| e.to_string())?;
+            copied_any = true;
+        }
+    }
+    if let Some(src) = ffprobe_src {
+        let dest = binaries_dir.join("ffprobe-x86_64-pc-windows-msvc.exe");
+        if !dest.exists() {
+            std::fs::copy(&src, &dest).map_err(|e| e.to_string())?;
+            copied_any = true;
+        }
+    }
+    if let Some(src) = yt_dlp_src {
+        let dest = binaries_dir.join("yt-dlp-x86_64-pc-windows-msvc.exe");
+        if !dest.exists() {
+            std::fs::copy(&src, &dest).map_err(|e| e.to_string())?;
+            copied_any = true;
+        }
+    }
+
+    if has_required_binaries(&binaries_dir) {
+        return Ok(Some(binaries_dir));
+    }
+
+    if copied_any {
+        return Err("Attempted repair but required binaries still missing".into());
+    }
+
+    Ok(None)
 }
 
 fn ffmpeg_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -295,7 +492,7 @@ fn export_black_video(
             app_root()?.join(raw)
         }
     } else {
-        exports_root()?
+        resolve_export_root()?
     };
     if let Err(err) = validate_writable_dir(&output_root) {
         let _ = append_video_trace_line(&session_id, &format!("{{\"stage\":\"backend_export_video_start\",\"error\":\"{}\"}}", err));
@@ -407,9 +604,33 @@ fn get_binaries_dir(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 fn get_export_root() -> Result<String, String> {
-    let root = exports_root()?;
+    let root = resolve_export_root()?;
     validate_writable_dir(&root)?;
     Ok(root.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn set_export_root(path: String) -> Result<String, String> {
+    let mut settings = load_settings()?;
+    if path.trim().is_empty() {
+        settings.export_root = None;
+        save_settings(&settings)?;
+        return get_export_root();
+    }
+
+    let candidate = {
+        let raw = PathBuf::from(path.trim());
+        if raw.is_absolute() {
+            raw
+        } else {
+            app_root()?.join(raw)
+        }
+    };
+
+    validate_writable_dir(&candidate)?;
+    settings.export_root = Some(candidate.to_string_lossy().to_string());
+    save_settings(&settings)?;
+    get_export_root()
 }
 
 #[tauri::command]
@@ -493,6 +714,182 @@ fn read_downloaded_file(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(path).map_err(|e| e.to_string())
 }
 
+fn sanitized_file_name(name: &str, fallback_ext: &str) -> String {
+    let candidate = Path::new(name)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("audioworkshop-output");
+    if candidate.trim().is_empty() {
+        return format!("audioworkshop-output.{fallback_ext}");
+    }
+    candidate.to_string()
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn export_audio_file(
+    file_name: String,
+    format: String,
+    bytes: Vec<u8>,
+    output_root: Option<String>,
+) -> Result<String, String> {
+    let now = Local::now();
+    let date_folder = now.format("%Y-%m-%d").to_string();
+
+    let fallback_ext = if format.trim().is_empty() {
+        "mp3"
+    } else {
+        format.trim()
+    };
+    let file_name = sanitized_file_name(&file_name, fallback_ext);
+
+    let custom_root = output_root.is_some();
+    let output_root = if let Some(root) = output_root {
+        let raw = PathBuf::from(root);
+        if raw.is_absolute() {
+            raw
+        } else {
+            app_root()?.join(raw)
+        }
+    } else {
+        resolve_export_root()?
+    };
+    validate_writable_dir(&output_root)?;
+
+    let export_dir = if custom_root {
+        output_root.clone()
+    } else {
+        output_root.join(date_folder)
+    };
+    std::fs::create_dir_all(&export_dir).map_err(|e| e.to_string())?;
+
+    let output_path = export_dir.join(file_name);
+    std::fs::write(&output_path, bytes).map_err(|e| e.to_string())?;
+    Ok(output_path.to_string_lossy().to_string())
+}
+
+fn collect_files_recursively(root: &Path, out: &mut Vec<PathBuf>) {
+    let entries = match std::fs::read_dir(root) {
+        Ok(entries) => entries,
+        Err(_) => return,
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_files_recursively(&path, out);
+        } else {
+            out.push(path);
+        }
+    }
+}
+
+fn latest_file_with_prefix(root: &Path, prefix: &str) -> Option<PathBuf> {
+    let mut files: Vec<PathBuf> = Vec::new();
+    collect_files_recursively(root, &mut files);
+    let mut candidates: Vec<PathBuf> = files
+        .into_iter()
+        .filter(|p| {
+            p.file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n.starts_with(prefix))
+                .unwrap_or(false)
+        })
+        .collect();
+    candidates.sort_by_key(|p| {
+        std::fs::metadata(p)
+            .and_then(|m| m.modified())
+            .ok()
+    });
+    candidates.pop()
+}
+
+fn tail_lines(path: &Path, max_lines: usize) -> String {
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(err) => return format!("(unable to read {}: {err})", path.to_string_lossy()),
+    };
+    let lines: Vec<&str> = text.lines().rev().take(max_lines).collect();
+    lines.into_iter().rev().collect::<Vec<&str>>().join("\n")
+}
+
+#[tauri::command]
+fn write_support_bundle(app: tauri::AppHandle) -> Result<String, String> {
+    let logs = logs_root()?;
+    std::fs::create_dir_all(&logs).map_err(|e| e.to_string())?;
+
+    let stamp = Local::now().format("%Y%m%d_%H%M%S").to_string();
+    let bundle_path = logs.join(format!("support_bundle_{stamp}.txt"));
+
+    let app_root_text = app_root()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|e| format!("(error: {e})"));
+    let resource_dir_text = app
+        .path()
+        .resource_dir()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|e| format!("(error: {e})"));
+    let current_exe_text = std::env::current_exe()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|e| format!("(error: {e})"));
+    let current_dir_text = std::env::current_dir()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|e| format!("(error: {e})"));
+
+    let binaries_result = binaries_dir(&app)
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|e| format!("(error: {e})"));
+
+    let download_root = resolve_download_root()?;
+    let latest_download = latest_file_with_prefix(&download_root, "download_");
+    let latest_download_text = latest_download
+        .as_ref()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| "(none found)".into());
+    let latest_download_tail = latest_download
+        .as_ref()
+        .map(|p| tail_lines(p, 120))
+        .unwrap_or_else(|| "(no download log tail)".into());
+
+    let latest_video = latest_file_with_prefix(&logs, "video_export_");
+    let latest_video_text = latest_video
+        .as_ref()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| "(none found)".into());
+    let latest_video_tail = latest_video
+        .as_ref()
+        .map(|p| tail_lines(p, 120))
+        .unwrap_or_else(|| "(no video log tail)".into());
+
+    let contents = format!(
+        "Audio Workshop Support Bundle\n\
+generated_at={stamp}\n\n\
+[paths]\n\
+app_root={app_root_text}\n\
+resource_dir={resource_dir_text}\n\
+current_exe={current_exe_text}\n\
+current_dir={current_dir_text}\n\
+binaries_dir={binaries_result}\n\n\
+[latest_download_log]\n\
+path={latest_download_text}\n\
+{latest_download_tail}\n\n\
+[latest_video_log]\n\
+path={latest_video_text}\n\
+{latest_video_tail}\n",
+        stamp = stamp,
+        app_root_text = app_root_text,
+        resource_dir_text = resource_dir_text,
+        current_exe_text = current_exe_text,
+        current_dir_text = current_dir_text,
+        binaries_result = binaries_result,
+        latest_download_text = latest_download_text,
+        latest_download_tail = latest_download_tail,
+        latest_video_text = latest_video_text,
+        latest_video_tail = latest_video_tail
+    );
+
+    std::fs::write(&bundle_path, contents).map_err(|e| e.to_string())?;
+    Ok(bundle_path.to_string_lossy().to_string())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -503,6 +900,7 @@ fn main() {
             ensure_downloads_dir,
             get_binaries_dir,
             get_export_root,
+            set_export_root,
             prepare_temp_audio,
             write_binary_file,
             export_black_video,
@@ -510,6 +908,8 @@ fn main() {
             append_video_trace,
             prepare_download,
             write_download_log,
+            write_support_bundle,
+            export_audio_file,
             write_meta_file,
             read_downloaded_file
         ])

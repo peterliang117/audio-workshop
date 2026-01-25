@@ -37,6 +37,64 @@
               "validator": "https?://.+"
             }
           ]
+        },
+        {
+          "name": "yt-dlp-external",
+          "cmd": "yt-dlp-x86_64-pc-windows-msvc.exe",
+          "sidecar": false,
+          "args": [
+            "--ignore-config",
+            "--ffmpeg-location",
+            {
+              "validator": ".+"
+            },
+            "-f",
+            "bestaudio",
+            "-x",
+            "--audio-format",
+            "m4a",
+            "--audio-quality",
+            "0",
+            "--windows-filenames",
+            "-o",
+            {
+              "validator": ".+"
+            },
+            "--print",
+            "after_move:filepath",
+            {
+              "validator": "https?://.+"
+            }
+          ]
+        },
+        {
+          "name": "yt-dlp-external-plain",
+          "cmd": "yt-dlp.exe",
+          "sidecar": false,
+          "args": [
+            "--ignore-config",
+            "--ffmpeg-location",
+            {
+              "validator": ".+"
+            },
+            "-f",
+            "bestaudio",
+            "-x",
+            "--audio-format",
+            "m4a",
+            "--audio-quality",
+            "0",
+            "--windows-filenames",
+            "-o",
+            {
+              "validator": ".+"
+            },
+            "--print",
+            "after_move:filepath",
+            {
+              "validator": "https?://.+"
+            }
+          ]
         }
       ]
     },
@@ -71,6 +129,64 @@
               "validator": "https?://.+"
             }
           ]
+        },
+        {
+          "name": "yt-dlp-external",
+          "cmd": "yt-dlp-x86_64-pc-windows-msvc.exe",
+          "sidecar": false,
+          "args": [
+            "--ignore-config",
+            "--ffmpeg-location",
+            {
+              "validator": ".+"
+            },
+            "-f",
+            "bestaudio",
+            "-x",
+            "--audio-format",
+            "m4a",
+            "--audio-quality",
+            "0",
+            "--windows-filenames",
+            "-o",
+            {
+              "validator": ".+"
+            },
+            "--print",
+            "after_move:filepath",
+            {
+              "validator": "https?://.+"
+            }
+          ]
+        },
+        {
+          "name": "yt-dlp-external-plain",
+          "cmd": "yt-dlp.exe",
+          "sidecar": false,
+          "args": [
+            "--ignore-config",
+            "--ffmpeg-location",
+            {
+              "validator": ".+"
+            },
+            "-f",
+            "bestaudio",
+            "-x",
+            "--audio-format",
+            "m4a",
+            "--audio-quality",
+            "0",
+            "--windows-filenames",
+            "-o",
+            {
+              "validator": ".+"
+            },
+            "--print",
+            "after_move:filepath",
+            {
+              "validator": "https?://.+"
+            }
+          ]
         }
       ]
     }
@@ -81,12 +197,15 @@
     "ensure_downloads_dir",
     "get_binaries_dir",
     "get_export_root",
+    "set_export_root",
     "prepare_temp_audio",
     "write_binary_file",
     "export_black_video",
     "write_video_log",
     "append_video_trace",
     "write_download_log",
+    "write_support_bundle",
+    "export_audio_file",
     "write_meta_file",
     "read_downloaded_file"
   ]

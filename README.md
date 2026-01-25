@@ -10,6 +10,13 @@ Audio Workshop is a lightweight, personal MVP for quick audio edits and export. 
 - Input source: YouTube link (download + extract audio).
 - Output: audio file or black-screen video export.
 
+## Release 0.1.8 (Shareable)
+- Export / Download now supports a persistent **Save Folder** (Browse + Set).
+- Export / Download now shows the resolved save path after export.
+- YouTube download status now shows where the extracted audio was saved.
+- The app repairs missing `binaries/` layouts by copying/renaming sidecars on first run.
+- Binaries resolution has stronger fallbacks and better diagnostics in logs.
+
 ## MVP 2 (current)
 - Deterministic YouTube audio downloads (m4a-only, no webm fallback).
 - Bundled ffmpeg/ffprobe for extraction (no user dependencies).
@@ -51,6 +58,16 @@ Audio Workshop is a lightweight, personal MVP for quick audio edits and export. 
 
 ## Docs
 - `docs/WORKFLOW.md` for product and development workflow.
+
+## Sharing With Friends
+- Preferred installer: `src-tauri/target/release/bundle/nsis/Audio Workshop_0.1.8_x64-setup.exe`
+- After install, ask friends to test:
+  1. Download a known-good YouTube link.
+  2. File -> Export / Download and set a custom Save Folder.
+  3. Export and confirm the status shows the saved path.
+- If something fails, ask them to send:
+  - The newest `AudioWorkshop/downloads/YYYY-MM-DD/download_*.log`
+  - The newest `AudioWorkshop/logs/video_export_*.log`
 
 ## Submodules
 This repo vendors AudioMass as a git submodule.

@@ -1,6 +1,6 @@
 [package]
 name = "audio-workshop"
-version = "0.1.0"
+version = "0.1.8"
 description = "Desktop audio editor"
 authors = ["Audio Workshop"]
 edition = "2021"
