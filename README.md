@@ -1,4 +1,4 @@
-# audio-workshop-ios
+# AudioWorkshop
 Personal desktop audio editor for trimming, fades, and exporting audio or black-screen video (1080x1920) from a YouTube link. iOS is a future MVP.
 
 ## Overview
@@ -29,7 +29,7 @@ Audio Workshop is a lightweight, personal MVP for quick audio edits and export. 
   - Video: black-screen mp4 (1080x1920 portrait, 30fps).
 
 ## Export Video (Black Screen MP4)
-- Menu: File → Export Video (Black Screen MP4).
+- Menu: File -> Export Video (Black Screen MP4).
 - Output folder: `AudioWorkshop/exports/YYYY-MM-DD/`.
 - Filename: `audioworkshop__YYYYMMDD_HHMMSS__1080x1920_30fps__black.mp4`.
 - Uses bundled ffmpeg/ffprobe; logs written to `AudioWorkshop/logs/video_export_YYYYMMDD_HHMMSS.log`.
@@ -51,3 +51,12 @@ Audio Workshop is a lightweight, personal MVP for quick audio edits and export. 
 
 ## Docs
 - `docs/WORKFLOW.md` for product and development workflow.
+
+## Submodules
+This repo vendors AudioMass as a git submodule.
+
+Clone with submodules:
+- `git clone --recurse-submodules https://github.com/peterliang117/AudioWorkshop.git`
+
+Initialize/update submodules:
+- `git submodule update --init --recursive`

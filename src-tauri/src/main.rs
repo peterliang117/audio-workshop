@@ -131,24 +131,38 @@ fn binaries_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
         }
     }
 
-    let mut cwd = std::env::current_dir().map_err(|e| e.to_string())?;
-    if !cwd
-        .file_name()
-        .and_then(|name| name.to_str())
-        .map(|name| name.eq_ignore_ascii_case("src-tauri"))
-        .unwrap_or(false)
-    {
-        cwd = cwd.join("src-tauri");
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            if let Some(candidate) = find_binaries_dir(exe_dir) {
+                return candidate
+                    .canonicalize()
+                    .map_err(|e| e.to_string());
+            }
+        }
     }
 
-    let candidate = cwd.join("binaries");
-    if candidate.exists() {
+    let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
+    if let Some(candidate) = find_binaries_dir(&cwd) {
         return candidate
             .canonicalize()
             .map_err(|e| e.to_string());
     }
 
     Err("Binaries directory not found".into())
+}
+
+fn find_binaries_dir(start: &Path) -> Option<PathBuf> {
+    for ancestor in start.ancestors() {
+        let direct = ancestor.join("binaries");
+        if direct.exists() {
+            return Some(direct);
+        }
+        let src_tauri = ancestor.join("src-tauri").join("binaries");
+        if src_tauri.exists() {
+            return Some(src_tauri);
+        }
+    }
+    None
 }
 
 fn ffmpeg_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

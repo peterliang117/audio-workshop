@@ -11,5 +11,8 @@
 ## Development workflow
 1) Keep changes aligned with the MVP scope in `CLAUDE.md` (MVP 1 is desktop; iOS later).
 2) Prefer export-time processing for edits (non-destructive).
-3) Validate export defaults (1080x1920, 30fps, H.264 + AAC).
-4) Document user-facing behavior updates in `README.md`.
+3) Start the AudioMass static server before `tauri dev`:
+   - `powershell -ExecutionPolicy Bypass -File scripts/dev.ps1`
+   - or `cd vendor/audiomass/src` then `python -m http.server 5055`
+4) Validate export defaults (1080x1920, 30fps, H.264 + AAC).
+5) Document user-facing behavior updates in `README.md`.
