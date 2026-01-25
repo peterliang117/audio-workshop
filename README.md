@@ -1,79 +1,72 @@
 # AudioWorkshop
-Personal desktop audio editor for trimming, fades, and exporting audio or black-screen video (1080x1920) from a YouTube link. iOS is a future MVP.
+A desktop audio editor (Tauri + AudioMass) focused on fast YouTube-to-audio workflows and simple export, including black-screen vertical video export.
 
-## Overview
-Audio Workshop is a lightweight, personal MVP for quick audio edits and export. MVP 1 targets desktop; iOS is planned later. Audio is imported from a YouTube link and processed at export-time.
+This repo currently reflects the shareable desktop build: **0.1.8**.
 
-## MVP scope
-- Personal audio editing + export utility.
-- MVP 1 is a desktop app; iOS is a future MVP.
-- Input source: YouTube link (download + extract audio).
-- Output: audio file or black-screen video export.
+## What It Does (Current Status)
+- Downloads audio from a YouTube link using bundled sidecar tools.
+- Loads the downloaded audio directly into the editor.
+- Exports edited audio to a real file path you control.
+- Exports black-screen MP4 video (1080x1920, 30fps) using ffmpeg.
 
-## Release 0.1.8 (Shareable)
-- Export / Download now supports a persistent **Save Folder** (Browse + Set).
-- Export / Download now shows the resolved save path after export.
+## Key Flows
+1. Download From YouTube
+- Use the Download panel.
+- Paste a YouTube URL and click Download.
+- The status line shows where the extracted file was saved.
+
+2. Export / Download (Audio)
+- Menu: `File -> Export / Download`.
+- You can set a persistent Save Folder (Browse + Set).
+- After export, the modal shows the saved path.
+
+3. Export Video (Black Screen MP4)
+- Menu: `File -> Export Video (Black Screen MP4)`.
+- You can choose a custom Save Folder for the export.
+
+## Save Paths And Logs
+The app writes to an `AudioWorkshop/` folder next to where the app runs.
+
+Key locations:
+- Downloads: `AudioWorkshop/downloads/YYYY-MM-DD/`
+- Exports: `AudioWorkshop/exports/YYYY-MM-DD/`
+- Logs: `AudioWorkshop/logs/`
+
+Helpful files:
+- Latest download log: `AudioWorkshop/downloads/YYYY-MM-DD/download_*.log`
+- Latest video export log: `AudioWorkshop/logs/video_export_*.log`
+- Last resolved download path: `AudioWorkshop/downloads/YYYY-MM-DD/last_download.txt`
+
+## Release Notes (0.1.8)
+Compared to the earlier shareable iteration:
+- Export / Download now supports a persistent Save Folder (Browse + Set).
+- Export / Download now shows the resolved saved path after export.
+- Audio export now saves to disk via Tauri (not just a browser download).
 - YouTube download status now shows where the extracted audio was saved.
-- The app repairs missing `binaries/` layouts by copying/renaming sidecars on first run.
-- Binaries resolution has stronger fallbacks and better diagnostics in logs.
+- Binaries resolution is more robust across custom install locations.
+- The app can repair a missing `binaries/` layout on first run.
 
-## MVP 2 (current)
-- Deterministic YouTube audio downloads (m4a-only, no webm fallback).
-- Bundled ffmpeg/ffprobe for extraction (no user dependencies).
-- Download UI is isolated from AudioMass via a self-contained component.
-- Downloads are grouped by date in `AudioWorkshop/downloads/YYYY-MM-DD/`.
-- Full download logs are written to disk only (no UI logs).
+## Share With Friends
+Preferred installer:
+- `src-tauri/target/release/bundle/nsis/Audio Workshop_0.1.8_x64-setup.exe`
 
-## Features
-- Import via YouTube link.
-- Preview playback with scrubber.
-- Basic edits applied at export-time:
-  - Trim (start/end).
-  - Volume (0.0 ~ 2.0).
-  - Fade in/out (0 ~ 5s).
-- Export:
-  - Audio: m4a (default), wav (optional).
-  - Video: black-screen mp4 (1080x1920 portrait, 30fps).
+Recommended quick test plan:
+1. Install to a custom folder.
+2. Download a known-good YouTube link.
+3. Export audio using `File -> Export / Download` and set a custom Save Folder.
+4. Export a black-screen video.
 
-## Export Video (Black Screen MP4)
-- Menu: File -> Export Video (Black Screen MP4).
-- Output folder: `AudioWorkshop/exports/YYYY-MM-DD/`.
-- Filename: `audioworkshop__YYYYMMDD_HHMMSS__1080x1920_30fps__black.mp4`.
-- Uses bundled ffmpeg/ffprobe; logs written to `AudioWorkshop/logs/video_export_YYYYMMDD_HHMMSS.log`.
+If something fails, ask for:
+- The newest `AudioWorkshop/downloads/YYYY-MM-DD/download_*.log`
+- The newest `AudioWorkshop/logs/video_export_*.log`
 
-### Video export logs
-- Logs live in `AudioWorkshop/logs/video_export_{session}.log`.
-- Each line is a JSON trace event with a `stage` field.
-- Common stages: `export_clicked`, `precheck_audio_loaded_result`, `wav_export_start`,
-  `wav_worker_fetch_test`, `wav_blob_ready`, `backend_ffmpeg_start`, `backend_ffmpeg_exit`,
-  `export_success`, `export_failure`.
-- If export fails, check the last stage to identify the failure point.
+## Developer Notes
+- This repo vendors AudioMass as a git submodule in `vendor/audiomass`.
+- The desktop app is implemented with Tauri under `src-tauri`.
+- See `docs/WORKFLOW.md` for product and development workflow.
 
-## Export defaults
-- Black video size: 1080x1920.
-- FPS: 30.
-- Container: .mp4.
-- Video: H.264.
-- Audio: AAC.
-
-## Docs
-- `docs/WORKFLOW.md` for product and development workflow.
-
-## Sharing With Friends
-- Preferred installer: `src-tauri/target/release/bundle/nsis/Audio Workshop_0.1.8_x64-setup.exe`
-- After install, ask friends to test:
-  1. Download a known-good YouTube link.
-  2. File -> Export / Download and set a custom Save Folder.
-  3. Export and confirm the status shows the saved path.
-- If something fails, ask them to send:
-  - The newest `AudioWorkshop/downloads/YYYY-MM-DD/download_*.log`
-  - The newest `AudioWorkshop/logs/video_export_*.log`
-
-## Submodules
-This repo vendors AudioMass as a git submodule.
-
-Clone with submodules:
-- `git clone --recurse-submodules https://github.com/peterliang117/AudioWorkshop.git`
-
-Initialize/update submodules:
-- `git submodule update --init --recursive`
+Submodules:
+- Clone with submodules:
+  - `git clone --recurse-submodules https://github.com/peterliang117/AudioWorkshop.git`
+- Initialize/update submodules:
+  - `git submodule update --init --recursive`
