@@ -1,6 +1,13 @@
 {
   "name": "AudioWorkshop",
   "private": true,
+  "scripts": {
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "build": "npx tauri build",
+    "clean": "powershell -ExecutionPolicy Bypass -File scripts/clean.ps1",
+    "tauri:dev": "npx tauri dev",
+    "tauri:build": "npx tauri build"
+  },
   "devDependencies": {
     "@tauri-apps/cli": "^2.9.6"
   },

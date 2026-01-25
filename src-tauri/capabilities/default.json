@@ -207,6 +207,7 @@
     "write_support_bundle",
     "export_audio_file",
     "write_meta_file",
-    "read_downloaded_file"
+    "read_downloaded_file",
+    "find_latest_download"
   ]
 }

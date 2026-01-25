@@ -714,6 +714,38 @@ fn read_downloaded_file(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(path).map_err(|e| e.to_string())
 }
 
+#[tauri::command(rename_all = "camelCase")]
+fn find_latest_download(download_dir: String) -> Result<String, String> {
+    let root = resolve_download_root()?;
+    let dir = PathBuf::from(download_dir);
+    if !is_within(&root, &dir.join("probe.txt"))? {
+        return Err("Invalid download directory".into());
+    }
+
+    let entries = std::fs::read_dir(&dir).map_err(|e| e.to_string())?;
+    let mut candidates: Vec<PathBuf> = entries
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .filter(|path| {
+            path.extension()
+                .and_then(|ext| ext.to_str())
+                .map(|ext| ext.eq_ignore_ascii_case("m4a"))
+                .unwrap_or(false)
+        })
+        .collect();
+
+    candidates.sort_by_key(|path| {
+        std::fs::metadata(path)
+            .and_then(|meta| meta.modified())
+            .ok()
+    });
+
+    let latest = candidates.pop().ok_or("No downloaded file found")?;
+    let canonical = latest.canonicalize().map_err(|e| e.to_string())?;
+    Ok(canonical.to_string_lossy().to_string())
+}
+
 fn sanitized_file_name(name: &str, fallback_ext: &str) -> String {
     let candidate = Path::new(name)
         .file_name()
@@ -911,7 +943,8 @@ fn main() {
             write_support_bundle,
             export_audio_file,
             write_meta_file,
-            read_downloaded_file
+            read_downloaded_file,
+            find_latest_download
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

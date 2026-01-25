@@ -60,6 +60,17 @@ If something fails, ask for:
 - The newest `AudioWorkshop/downloads/YYYY-MM-DD/download_*.log`
 - The newest `AudioWorkshop/logs/video_export_*.log`
 
+
+## Repo Hygiene
+This repo previously had heavy generated folders checked in locally.
+
+Use the cleanup script when things get bulky:
+- PowerShell: `scripts/clean.ps1`
+- CMD: `scripts/clean.cmd`
+
+Then reinstall dependencies:
+- `npm install`
+
 ## Developer Notes
 - This repo vendors AudioMass as a git submodule in `vendor/audiomass`.
 - The desktop app is implemented with Tauri under `src-tauri`.
@@ -70,3 +81,6 @@ Submodules:
   - `git clone --recurse-submodules https://github.com/peterliang117/AudioWorkshop.git`
 - Initialize/update submodules:
   - `git submodule update --init --recursive`
+
+
+

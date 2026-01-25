@@ -18,6 +18,7 @@
     ]
   },
   "bundle": {
+    "active": true,
     "externalBin": [
       "binaries/yt-dlp",
       "binaries/ffmpeg",
