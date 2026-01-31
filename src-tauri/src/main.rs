@@ -20,18 +20,10 @@ struct Settings {
 }
 
 fn app_root() -> Result<PathBuf, String> {
-    let mut cwd = std::env::current_dir().map_err(|e| e.to_string())?;
-    if cwd
-        .file_name()
-        .and_then(|name| name.to_str())
-        .map(|name| name.eq_ignore_ascii_case("src-tauri"))
-        .unwrap_or(false)
-    {
-        if let Some(parent) = cwd.parent() {
-            cwd = parent.to_path_buf();
-        }
-    }
-    let root = cwd.join("AudioWorkshop");
+    let base = std::env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .ok_or("LOCALAPPDATA not set")?;
+    let root = base.join("AudioWorkshop");
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     Ok(root)
 }
@@ -64,7 +56,10 @@ fn logs_root() -> Result<PathBuf, String> {
 }
 
 fn default_export_root() -> Result<PathBuf, String> {
-    Ok(app_root()?.join("exports"))
+    let home = std::env::var_os("USERPROFILE")
+        .map(PathBuf::from)
+        .ok_or("USERPROFILE not set")?;
+    Ok(home.join("Downloads"))
 }
 
 fn tmp_root() -> Result<PathBuf, String> {
