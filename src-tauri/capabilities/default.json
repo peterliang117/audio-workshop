@@ -13,88 +13,19 @@
           "name": "binaries/yt-dlp",
           "cmd": "binaries/yt-dlp",
           "sidecar": true,
-          "args": [
-            "--ignore-config",
-            "--ffmpeg-location",
-            {
-              "validator": ".+"
-            },
-            "-f",
-            "bestaudio",
-            "-x",
-            "--audio-format",
-            "m4a",
-            "--audio-quality",
-            "0",
-            "--windows-filenames",
-            "-o",
-            {
-              "validator": ".+"
-            },
-            "--print",
-            "after_move:filepath",
-            {
-              "validator": "https?://.+"
-            }
-          ]
+          "args": true
         },
         {
           "name": "yt-dlp-external",
           "cmd": "yt-dlp-x86_64-pc-windows-msvc.exe",
           "sidecar": false,
-          "args": [
-            "--ignore-config",
-            "--ffmpeg-location",
-            {
-              "validator": ".+"
-            },
-            "-f",
-            "bestaudio",
-            "-x",
-            "--audio-format",
-            "m4a",
-            "--audio-quality",
-            "0",
-            "--windows-filenames",
-            "-o",
-            {
-              "validator": ".+"
-            },
-            "--print",
-            "after_move:filepath",
-            {
-              "validator": "https?://.+"
-            }
-          ]
+          "args": true
         },
         {
           "name": "yt-dlp-external-plain",
           "cmd": "yt-dlp.exe",
           "sidecar": false,
-          "args": [
-            "--ignore-config",
-            "--ffmpeg-location",
-            {
-              "validator": ".+"
-            },
-            "-f",
-            "bestaudio",
-            "-x",
-            "--audio-format",
-            "m4a",
-            "--audio-quality",
-            "0",
-            "--windows-filenames",
-            "-o",
-            {
-              "validator": ".+"
-            },
-            "--print",
-            "after_move:filepath",
-            {
-              "validator": "https?://.+"
-            }
-          ]
+          "args": true
         }
       ]
     },
@@ -105,88 +36,19 @@
           "name": "binaries/yt-dlp",
           "cmd": "binaries/yt-dlp",
           "sidecar": true,
-          "args": [
-            "--ignore-config",
-            "--ffmpeg-location",
-            {
-              "validator": ".+"
-            },
-            "-f",
-            "bestaudio",
-            "-x",
-            "--audio-format",
-            "m4a",
-            "--audio-quality",
-            "0",
-            "--windows-filenames",
-            "-o",
-            {
-              "validator": ".+"
-            },
-            "--print",
-            "after_move:filepath",
-            {
-              "validator": "https?://.+"
-            }
-          ]
+          "args": true
         },
         {
           "name": "yt-dlp-external",
           "cmd": "yt-dlp-x86_64-pc-windows-msvc.exe",
           "sidecar": false,
-          "args": [
-            "--ignore-config",
-            "--ffmpeg-location",
-            {
-              "validator": ".+"
-            },
-            "-f",
-            "bestaudio",
-            "-x",
-            "--audio-format",
-            "m4a",
-            "--audio-quality",
-            "0",
-            "--windows-filenames",
-            "-o",
-            {
-              "validator": ".+"
-            },
-            "--print",
-            "after_move:filepath",
-            {
-              "validator": "https?://.+"
-            }
-          ]
+          "args": true
         },
         {
           "name": "yt-dlp-external-plain",
           "cmd": "yt-dlp.exe",
           "sidecar": false,
-          "args": [
-            "--ignore-config",
-            "--ffmpeg-location",
-            {
-              "validator": ".+"
-            },
-            "-f",
-            "bestaudio",
-            "-x",
-            "--audio-format",
-            "m4a",
-            "--audio-quality",
-            "0",
-            "--windows-filenames",
-            "-o",
-            {
-              "validator": ".+"
-            },
-            "--print",
-            "after_move:filepath",
-            {
-              "validator": "https?://.+"
-            }
-          ]
+          "args": true
         }
       ]
     }
